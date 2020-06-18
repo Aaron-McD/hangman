@@ -1,12 +1,16 @@
+require_relative "Serializable.rb"
+
 class Hangman
-    def initialize(word = nil)
+    include Serializable
+    attr_reader :word
+    def initialize(word = nil, letters_guessed = [], incorrect_guesses_made = 0)
         if word != nil
             @word = word
         else
             @word = pick_word
         end
-        @letters_guessed = []
-        @incorrect_guesses_made = 0
+        @letters_guessed = letters_guessed
+        @incorrect_guesses_made = incorrect_guesses_made
         @valid_chars = 'a'..'z'
     end
 
@@ -45,6 +49,30 @@ class Hangman
             @incorrect_guesses_made += 1
             puts "Sorry that's an incorrect guess!"
         end
+    end
+
+    def show_saves
+        if Dir.exist? "saves"
+            children = Dir.children("saves")
+            puts "These are your current save states:"
+            children.each_with_index do |child, i|
+                puts "#{i + 1}: #{child.gsub(".txt", "")}"
+            end
+        else
+            puts "You have no current save files."
+        end
+    end
+
+    def save_state(filename)
+        Dir.mkdir "saves" unless Dir.exist? "saves"
+        serial_string = self.serialize
+        save = File.new("saves/#{filename}", "w")
+        save.puts serial_string
+    end
+
+    def load_state(filename)
+        load_contents = File.read "saves/#{filename}"
+        self.unserialize(load_contents)
     end
 
     def out_of_guesses? 
