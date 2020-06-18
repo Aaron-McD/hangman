@@ -2,7 +2,8 @@ require_relative "Serializable.rb"
 
 class Hangman
     include Serializable
-    attr_reader :word
+    attr_reader :word, :letters_guessed
+    @@valid_chars = 'a'..'z'
     def initialize(word = nil, letters_guessed = [], incorrect_guesses_made = 0)
         if word != nil
             @word = word
@@ -11,7 +12,6 @@ class Hangman
         end
         @letters_guessed = letters_guessed
         @incorrect_guesses_made = incorrect_guesses_made
-        @valid_chars = 'a'..'z'
     end
 
     def won?
@@ -27,28 +27,18 @@ class Hangman
         return guessed
     end
 
-    def recieve_new_guess
-        puts "You have guessed the following letters: #{@letters_guessed}"
-        puts "Please enter a new character to guess with: "
-        while true
-            input = gets.chomp.downcase.split("")
-            if(input.length > 1)
-                puts "Please only enter a single character."
-            elsif(@letters_guessed.include?(input[0]))
-                puts "You have already guessed that character."
-            elsif(!@valid_chars.include?(input[0]))
-                puts "Sorry that isn't a valid letter, please try again."
-            else
-                break
-            end
-        end
-        @letters_guessed.push(input[0])
-        if(@word.downcase.include?(input[0]))
+    def recieve_new_guess(letter)
+        @letters_guessed.push(letter)
+        if(@word.downcase.include?(letter))
             puts "That character is in the word!"
         else
             @incorrect_guesses_made += 1
             puts "Sorry that's an incorrect guess!"
         end
+    end
+
+    def valid_chars
+        return @@valid_chars
     end
 
     def show_saves
@@ -72,6 +62,7 @@ class Hangman
 
     def load_state(filename)
         load_contents = File.read "saves/#{filename}"
+        File.delete("saves/#{filename}")
         self.unserialize(load_contents)
     end
 
